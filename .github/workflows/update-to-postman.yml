@@ -1,0 +1,39 @@
+name: Update Postman Collection from Public Swagger
+
+on:
+  workflow_dispatch:  
+
+jobs:
+  update-postman:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Atualizar collection Postman via API
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+          COLLECTION_UID: '9vch7d6'  
+          SWAGGER_RAW_URL: 'https://raw.githubusercontent.com/helenacativo/swagger-docs/main/docs/swagger.json' 
+        run: |
+          echo "Search swagger.json"
+
+          SWAGGER_JSON=$(curl -sL $SWAGGER_RAW_URL)
+
+          PAYLOAD=$(jq -n --argjson openapi "$SWAGGER_JSON" '{
+            collection: {
+              info: {
+                name: "Swagger API Collection",
+                schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+              },
+              item: [],
+              openapi: $openapi
+            }
+          }')
+
+          echo "Enviando atualização para Postman..."
+
+          curl -X PUT "https://api.getpostman.com/collections/${COLLECTION_UID}" \
+            -H "X-Api-Key: $POSTMAN_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
+
+
