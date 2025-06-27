@@ -11,7 +11,7 @@ jobs:
       - name: Atualizar collection Postman via API
         env:
           POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
-          COLLECTION_UID: '9vch7d6'
+          COLLECTION_UID: '36402335-34684a5d-9513-420e-a66f-b0304972e465'
           SWAGGER_RAW_URL: 'https://raw.githubusercontent.com/helenacativo/swagger-docs/main/docs/swagger.json'
         run: |
           echo "Downloading swagger.json..."
