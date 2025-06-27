@@ -8,34 +8,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Update Postman collection via API
-      env:
-        POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
-        COLLECTION_UID: '9vch7d6'
-        SWAGGER_RAW_URL: 'https://raw.githubusercontent.com/helenacativo/swagger-docs/main/docs/swagger.json'
-      run: |
-        echo "Downloading swagger.json..."
+      - name: Atualizar collection Postman via API
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+          COLLECTION_UID: '9vch7d6'
+          SWAGGER_RAW_URL: 'https://raw.githubusercontent.com/helenacativo/swagger-docs/main/docs/swagger.json'
+        run: |
+          echo "Downloading swagger.json..."
+          curl -sL $SWAGGER_RAW_URL -o swagger.json
 
-        # Download the file and save it locally
-        curl -sL $SWAGGER_RAW_URL -o swagger.json
+          echo "Building Postman payload..."
+          jq -n --slurpfile openapi swagger.json '{
+            collection: {
+              info: {
+                name: "Swagger API Collection",
+                schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+              },
+              item: [],
+              openapi: $openapi[0]
+            }
+          }' > payload.json
 
-        echo "Building Postman payload..."
-
-        # Build the payload using the file content
-        PAYLOAD=$(jq -n --slurpfile openapi swagger.json '{
-        collection: {
-          info: {
-            name: "Swagger API Collection",
-            schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-          },
-          item: [],
-          openapi: $openapi[0]
-        }
-        }')
-
-        echo "Sending update to Postman..."
-
-        curl -X PUT "https://api.getpostman.com/collections/${COLLECTION_UID}" \
-        -H "X-Api-Key: $POSTMAN_API_KEY" \
-        -H "Content-Type: application/json" \
-        -d "$PAYLOAD"
+          echo "Sending update to Postman..."
+          curl -X PUT "https://api.getpostman.com/collections/${COLLECTION_UID}" \
+            -H "X-Api-Key: $POSTMAN_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @payload.json
